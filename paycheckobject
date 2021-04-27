@@ -1,0 +1,129 @@
+import sqlite3
+
+class DataBaseStuff():
+
+    def connectToDB(self):
+        conn = sqlite3.connect(
+            "C:/Users/Matt Dalton/OneDrive/PortableApps/SqlitemanPortable/App/SQLiteDatabaseBrowser/data2.db")
+        print(conn.total_changes)
+        c = conn.cursor()
+        return c, conn
+
+    def CreateTablePaycheck(self, c):
+        createTable = "CREATE TABLE Paycheck(id int Not Null, date text Not Null, amount real Not Null, Primary Key (id, date))"
+        c.execute(createTable)
+
+    def SelectPaycheck(self, c):
+        queryTable = "SELECT * from Paycheck"
+        queryResults = c.execute(queryTable)
+        records = c.fetchall()
+
+        return records
+
+    def InsertPaycheck(self, c, employee_ID, amount, date):
+        c.execute("INSERT INTO Paycheck(id, amount, date) VALUES(?, ?, ?)", (employee_ID, amount, date))
+
+    def DropTablePaycheck(self, c):
+        c.execute("DROP TABLE Paycheck")
+
+    def CommitData(self, conn):
+        conn.commit()
+
+    def CloseDB(self, c):
+        c.close()
+
+class Paycheck:
+
+
+    def __init__(self):
+        self.hours = 0
+        self.hourly_wage = 0
+        self.over_time = 0
+
+    def add_check(self):
+        hours_worked_bi_weekly = [0, 0]
+        hourly_wage = float(input("what is your hourly wage? "))
+        hours_worked_bi_weekly[0] = float(input("How many hours did you work for week 1? "))
+        hours_worked_bi_weekly[1] = float(input("How many hours did you work for week 2? "))
+        paycheck_period = input("Enter the date for this file ")
+
+        return hours_worked_bi_weekly, hourly_wage, paycheck_period
+
+    def Hoursextended(self,hours, hourly_wage):
+
+        if hours > 40:
+            gross_pay = round((hourly_wage * 40) + ((hourly_wage * 1.5) * (hours - 40)), 3)
+        else:
+            gross_pay = round(hourly_wage * hours, 3)
+
+        return gross_pay
+
+    def CalculateTax(self, gross_pay):
+
+        state_tax_rate = .04
+        federal_tax_rate = .05
+        medicare_rate = .014
+        social_security_rate = .06
+
+        state_tax_amt = round(gross_pay * state_tax_rate, 3)
+        medicare_amt = round(gross_pay * medicare_rate, 3)
+        federal_tax_amt = round(gross_pay * federal_tax_rate, 3)
+        social_security_amt = round(gross_pay * social_security_rate, 3)
+        total_taxes = social_security_amt + state_tax_amt + medicare_amt + federal_tax_amt
+
+        return total_taxes
+
+    def Net_pay(self, total_taxes, gross_pay):
+        net_pay = gross_pay - total_taxes - float(insurance_amt)
+
+        return net_pay
+
+    def Insurance(self):
+        dental_insurance = 0
+        health_insurance = 0
+        vision_insurance = 0
+
+        insurance_ask = input("Would you like to add insurance? (Y/N) ")
+        if insurance_ask == "Y":
+            health_insurance = float(input("How much is your health insurance? "))
+            dental_insurance = float(input("How much is your dental insurance? "))
+            vision_insurance = float(input("How much is your vision insurance? "))
+        insurance_amt = health_insurance + dental_insurance + vision_insurance
+
+        return insurance_amt
+
+    def user_prompt(self):
+        user_prompt = input("Would you like to (V)iew or (A)dd? ")
+
+        return user_prompt
+
+db = DataBaseStuff()
+c, conn = db.connectToDB()
+
+#db.CreateTablePaycheck(c)
+#db.DropTablePaycheck(c)
+my_paycheck = Paycheck()
+user_prompt1 = my_paycheck.user_prompt()
+if user_prompt1 == "V":
+    records_return = db.SelectPaycheck(c)
+    print(records_return)
+elif user_prompt1 == "A":
+    hours_worked_bi_weekly, hourly_wage, paycheck_period = my_paycheck.add_check()
+    gp1 = my_paycheck.Hoursextended(hours_worked_bi_weekly[0], hourly_wage)
+    gp2 = my_paycheck.Hoursextended(hours_worked_bi_weekly[1], hourly_wage)
+    gpa = gp1 + gp2
+    insurance_amt = my_paycheck.Insurance()
+    total_taxes = my_paycheck.CalculateTax(gpa)
+    net_pay = my_paycheck.Net_pay(total_taxes, gpa)
+    print("This Is Your Net Pay!", net_pay)
+    employee_ID = int(input("Please Enter Your Employee ID "))
+    db.InsertPaycheck(c,employee_ID, net_pay, paycheck_period)
+    db.CommitData(conn)
+    db.CloseDB(c)
+
+
+        
+
+else:
+    print("The Value You Entered Is Invaild")
+
